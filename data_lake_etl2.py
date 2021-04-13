@@ -12,7 +12,7 @@ default_args = {
 }
 
 dag = DAG(
-    USERNAME + '_data_lake_etl',
+    USERNAME + '_data_lake_etl2',
     default_args=default_args,
     description='Data Lake ETL tasks',
     schedule_interval="0 0 1 1 *",
