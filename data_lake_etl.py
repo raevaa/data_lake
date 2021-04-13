@@ -75,7 +75,7 @@ dm_traffic = DataProcHiveOperator(
     dag=dag,
     query="""
         insert overwrite table araev.dm_traffic partition (year='{{ execution_date.year }}') 
-        select user_id, max(bytes_received), min(bytes_received), avg(bytes_received) from araev.stg_traffic where year(`timestamp`) = {{ execution_date.year }} GROUP BY user_id;
+        select user_id, max(bytes_received), min(bytes_received), avg(bytes_received) from araev.ods_traffic where year(`timestamp`) = {{ execution_date.year }} GROUP BY user_id;
     """,
     cluster_name='cluster-dataproc',
     job_name=USERNAME + '_dm_traffic_{{ execution_date.year }}_{{ params.job_suffix }}',
