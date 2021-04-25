@@ -36,27 +36,9 @@ fill_ods = PostgresOperator(
     """
 )
 
-clear_ods_hashed = PostgresOperator(
-    task_id="clear_ods_hashed",
-    dag=dag,
-    sql="""
-        DELETE FROM araev.ods_payment_hashed WHERE EXTRACT(YEAR FROM pay_date::DATE) = {{ execution_date.year }}
-    """
-)
-
-fill_ods_hashed = PostgresOperator(
-    task_id="fill_ods_hashed",
-    dag=dag,
-    sql="""
-        INSERT INTO araev.ods_payment_hashed
-        SELECT *, '{{ execution_date }}'::TIMESTAMP AS LOAD_DT FROM araev.ods_v_payment 
-        WHERE EXTRACT(YEAR FROM pay_date::DATE) = {{ execution_date.year }}
-    """
-)
-
 ods_loaded = DummyOperator(task_id="ods_loaded", dag=dag)
 
-clear_ods >> fill_ods >> clear_ods_hashed >> fill_ods_hashed >> ods_loaded
+clear_ods >> fill_ods >> ods_loaded
 
 dds_hub_user = PostgresOperator(
     task_id="dds_hub_user",
