@@ -66,7 +66,7 @@ dds_hub_user = PostgresOperator(
     sql="""
         INSERT INTO araev.dds_hub_user ("user_pk", "user_key", "load_date", "record_source")
         SELECT "user_pk", "user_key", "load_date", "record_source"
-        FROM araev.view_hub_user_etl
+        FROM araev.hub_user_etl
     """
 )
 
@@ -76,7 +76,7 @@ dds_hub_billing_period = PostgresOperator(
     sql="""
         insert into araev.dds_hub_billing_period (BILLING_PERIOD_PK, BILLING_PERIOD_KEY, LOAD_DATE, RECORD_SOURCE)
         SELECT BILLING_PERIOD_PK, BILLING_PERIOD_KEY, LOAD_DATE, RECORD_SOURCE
-        FROM araev.view_hub_billing_period_etl
+        FROM araev.hub_billing_period_etl
     """
 )
 
@@ -86,7 +86,7 @@ dds_hub_account = PostgresOperator(
     sql="""
         insert into araev.dds_hub_account (ACCOUNT_PK, ACCOUNT_KEY, LOAD_DATE, RECORD_SOURCE)
         SELECT ACCOUNT_PK, ACCOUNT_KEY, LOAD_DATE, RECORD_SOURCE
-        FROM araev.view_hub_account_etl
+        FROM araev.hub_account_etl
 
     """
 )
@@ -102,7 +102,7 @@ dds_link_user_account = PostgresOperator(
     sql="""
     insert into araev.dds_link_user_account (USER_ACCOUNT_PK, USER_PK, ACCOUNT_PK, LOAD_DATE, RECORD_SOURCE)
     SELECT USER_ACCOUNT_PK, USER_PK, ACCOUNT_PK, LOAD_DATE, RECORD_SOURCE
-    FROM araev.view_link_user_account_etl
+    FROM araev.link_user_account_etl
     """
 )
 dds_link_account_billing_payment = PostgresOperator(
@@ -111,7 +111,7 @@ dds_link_account_billing_payment = PostgresOperator(
     sql="""
     insert into araev.dds_link_account_billing_payment (PAY_PK, ACCOUNT_PK, PAYMENT_PK, BILLING_PERIOD_PK, LOAD_DATE, RECORD_SOURCE)
     SELECT PAY_PK, ACCOUNT_PK, PAYMENT_PK, BILLING_PERIOD_PK, LOAD_DATE, RECORD_SOURCE
-    FROM araev.view_link_account_billing_payment_etl
+    FROM araev.link_account_billing_payment_etl
     """
 )
 
