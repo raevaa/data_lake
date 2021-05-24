@@ -53,7 +53,7 @@ fill_ods_hashed = PostgresOperator(
     dag=dag,
     sql="""
         INSERT INTO araev.final_ods_mdm_hashed
-        SELECT *, '{{ execution_date }}'::TIMESTAMP AS LOAD_DT FROM araev.project_ods_v_mdm 
+        SELECT *, '{{ execution_date }}'::TIMESTAMP AS LOAD_DT FROM araev.final_ods_mdm 
         WHERE EXTRACT(YEAR FROM registered_at) = {{ execution_date.year }}
     """
 )
