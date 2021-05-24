@@ -204,7 +204,7 @@ final_dds_sat_pay = PostgresOperator(
     WHERE a.LOAD_DATE <= '{{ execution_date }}'::TIMESTAMP
     ),
      update_records as (
-        a.pay_pk, a.payment_hashdif, a.pay_doc_num, a.pay_doc_type, a.pay_date, a.sum, a.effective_from, a.load_date, a.record_source from araev.final_dds_sat_pay as a
+        select a.pay_pk, a.payment_hashdif, a.pay_doc_num, a.pay_doc_type, a.pay_date, a.sum, a.effective_from, a.load_date, a.record_source from araev.final_dds_sat_pay as a
         join source_data as b on a.PAY_PK = b.PAY_PK
      ),
      latest_records as (
@@ -222,7 +222,7 @@ final_dds_sat_pay = PostgresOperator(
           )
      select * from records_to_insert
     """
-) 
+)
 
 final_all_links_loaded >> final_dds_sat_user
 final_all_links_loaded >> final_dds_sat_payment
