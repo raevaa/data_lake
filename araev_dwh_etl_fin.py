@@ -114,11 +114,22 @@ final_dds_link_account_billing_payment = PostgresOperator(
     FROM araev.final_dds_link_account_billing_payment_etl
     """
 )
+final_dds_link_account_pay = PostgresOperator(
+    task_id="final_dds_link_account_pay",
+    dag=dag,
+    sql="""
+    insert into araev.final_dds_link_account_pay (PAY_PK, ACCOUNT_PK, USER_PK, BILLING_PERIOD_PK, LOAD_DATE, RECORD_SOURCE)
+    SELECT PAY_PK, ACCOUNT_PK, PAYMENT_PK, BILLING_PERIOD_PK, LOAD_DATE, RECORD_SOURCE
+    FROM araev.final_dds_link_account_billing_payment_etl
+    """
+)
+
 
 final_all_links_loaded = DummyOperator(task_id="final_all_links_loaded", dag=dag)
 
 final_all_hubs_loaded >> final_dds_link_user_account >> final_all_links_loaded
 final_all_hubs_loaded >> final_dds_link_account_billing_payment >> final_all_links_loaded
+final_all_hubs_loaded >> final_dds_link_account_pay >> final_all_links_loaded
 
 final_dds_sat_user = PostgresOperator(
     task_id="final_dds_sat_user",
@@ -182,5 +193,36 @@ final_dds_sat_payment = PostgresOperator(
     """
 )   
 
+final_dds_sat_pay = PostgresOperator(
+    task_id="final_dds_sat_pay",
+    dag=dag,
+    sql="""
+    insert into araev.final_dds_sat_pay (pay_pk, payment_hashdif, pay_doc_num, pay_doc_type, pay_date, sum, effective_from, load_date, record_source)
+    with source_data as (
+    select a.PAY_PK, a.PAYMENT_HASHDIF, a.pay_doc_num, a.pay_doc_type, a.pay_date, a.sum, a.effective_from, a.load_date, a.record_source from araev.final_ods_payment_hashed as a
+    WHERE a.LOAD_DATE <= '{{ execution_date }}'::TIMESTAMP
+    ),
+     update_records as (
+        a.pay_pk, a.payment_hashdif, a.pay_doc_num, a.pay_doc_type, a.pay_date, a.sum, a.effective_from, a.load_date, a.record_source from araev.final_dds_sat_pay as a
+        join source_data as b on a.PAY_PK = b.PAY_PK AND a.LOAD_DATE <= (SELECT max(LOAD_DATE) from source_data)
+     ),
+     latest_records as (
+         select * from (
+                       select c.PAY_PK, c.PAYMENT_HASHDIF, c.LOAD_DATE,
+                       RANK() over (partition by c.PAY_PK order by c.LOAD_DATE DESC) rank_1
+                       FROM update_records as c
+            ) as s
+            WHERE rank_1 = 1
+            ),
+     records_to_insert as (
+         select distinct v.PAY_PK, v.PAYMENT_HASHDIF, v.pay_doc_num, v.pay_doc_type, v.pay_date, v.sum, v.effective_from, v.load_date, v.record_source from source_data as v
+         left join latest_records on latest_records.PAYMENT_HASHDIF=v.PAYMENT_HASHDIF and latest_records.PAY_PK=v.PAY_PK
+         where latest_records.PAYMENT_HASHDIF is null
+          )
+     select * from records_to_insert
+    """
+) 
+
 final_all_links_loaded >> final_dds_sat_user
 final_all_links_loaded >> final_dds_sat_payment
+final_all_links_loaded >> final_dds_sat_pay
