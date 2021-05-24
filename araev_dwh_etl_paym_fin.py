@@ -13,7 +13,7 @@ default_args = {
 }
 
 dag = DAG(
-    USERNAME + '_final_dwh_etl',
+    USERNAME + '_final_dwh_etl_payment',
     default_args=default_args,
     description='Final DWH ETL tasks payment',
     schedule_interval="0 0 1 1 *",
