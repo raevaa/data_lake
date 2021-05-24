@@ -80,7 +80,7 @@ final_dds_hub_billing_period = PostgresOperator(
     """
 )
 
-dds_hub_account = PostgresOperator(
+final_dds_hub_account = PostgresOperator(
     task_id="dds_hub_account",
     dag=dag,
     sql="""
