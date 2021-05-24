@@ -160,12 +160,5 @@ join araev.final_payment_report_dim_registration_year d on tmp.registration_year
             """
 )
 
-drop_payment_report_temp = PostgresOperator(
-    task_id='drop_payment_report_temp',
-    dag=dag,
-    sql="""
-          drop table if exists araev.final_payment_report_temp_{{ execution_date.year }};
-     """
-)
-all_dims_loaded >> dim_fct >>  drop_payment_report_temp
 
+all_dims_loaded >> dim_fct
