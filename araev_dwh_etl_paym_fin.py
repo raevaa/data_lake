@@ -49,9 +49,7 @@ final_fill_ods_hashed = PostgresOperator(
     dag=dag,
     sql="""
         INSERT INTO araev.final_ods_payment_hashed
-        SELECT user_id, pay_doc_type, pay_doc_num, account, phone, billing_period, pay_date, sum, user_key,
-        account_key, pay_doc_type_key, pay_doc_num_key, billing_period_key, record_source, user_pk, account_pk,
-        billing_period_pk, payment_pk, pay_pk, user_account_pk, user_hashdif, payment_hashdif, effective_from, '{{ execution_date }}'::TIMESTAMP FROM araev.final_ods_v_payment 
+        SELECT user_id, pay_doc_type, pay_doc_num, account, phone, billing_period, pay_date, sum, user_id::TEXT AS USER_KEY, account::TEXT AS ACCOUNT_KEY, pay_doc_type::TEXT AS pay_doc_type_key, pay_doc_num::text AS pay_doc_num_key, billing_period::TEXT AS BILLING_PERIOD_KEY, 'PAYMENT - DATA LAKE'::TEXT AS RECORD_SOURCE FROM araev.final_ods_v_payment 
         WHERE EXTRACT(YEAR FROM pay_date::DATE) = {{ execution_date.year }}
     """
 )
