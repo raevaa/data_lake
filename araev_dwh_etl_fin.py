@@ -66,7 +66,7 @@ final_dds_hub_user = PostgresOperator(
     sql="""
         INSERT INTO araev.final_dds_hub_user ("user_pk", "user_key", "load_date", "record_source")
         SELECT "user_pk", "user_key", "load_date", "record_source"
-        FROM araev.final_hub_user_etl
+        FROM araev.final_dds_hub_user_etl
     """
 )
 
@@ -76,7 +76,7 @@ final_dds_hub_billing_period = PostgresOperator(
     sql="""
         insert into araev.final_dds_hub_billing_period (BILLING_PERIOD_PK, BILLING_PERIOD_KEY, LOAD_DATE, RECORD_SOURCE)
         SELECT BILLING_PERIOD_PK, BILLING_PERIOD_KEY, LOAD_DATE, RECORD_SOURCE
-        FROM araev.final_hub_billing_period_etl
+        FROM araev.final_dds_hub_billing_period_etl
     """
 )
 
@@ -86,7 +86,7 @@ final_dds_hub_account = PostgresOperator(
     sql="""
         insert into araev.final_dds_hub_account (ACCOUNT_PK, ACCOUNT_KEY, LOAD_DATE, RECORD_SOURCE)
         SELECT ACCOUNT_PK, ACCOUNT_KEY, LOAD_DATE, RECORD_SOURCE
-        FROM araev.final_hub_account_etl
+        FROM araev.final_dds_hub_account_etl
     """
 )
 
@@ -102,7 +102,7 @@ final_dds_link_user_account = PostgresOperator(
     sql="""
     insert into araev.final_dds_link_user_account (USER_ACCOUNT_PK, USER_PK, ACCOUNT_PK, LOAD_DATE, RECORD_SOURCE)
     SELECT USER_ACCOUNT_PK, USER_PK, ACCOUNT_PK, LOAD_DATE, RECORD_SOURCE
-    FROM araev.final_link_user_account_etl
+    FROM araev.final_dds_link_user_account_etl
     """
 )
 final_dds_link_account_billing_payment = PostgresOperator(
@@ -111,13 +111,14 @@ final_dds_link_account_billing_payment = PostgresOperator(
     sql="""
     insert into araev.final_dds_link_account_billing_payment (PAY_PK, ACCOUNT_PK, PAYMENT_PK, BILLING_PERIOD_PK, LOAD_DATE, RECORD_SOURCE)
     SELECT PAY_PK, ACCOUNT_PK, PAYMENT_PK, BILLING_PERIOD_PK, LOAD_DATE, RECORD_SOURCE
-    FROM araev.final_link_account_billing_payment_etl
+    FROM araev.final_dds_link_account_billing_payment_etl
     """
 )
 
 final_all_links_loaded = DummyOperator(task_id="final_all_links_loaded", dag=dag)
 
-final_all_hubs_loaded >> final_dds_link_user_account >> final_dds_link_account_billing_payment >> final_all_links_loaded
+final_all_hubs_loaded >> final_dds_link_user_account >> final_all_links_loaded
+final_all_hubs_loaded >> final_dds_link_account_billing_payment >> final_all_links_loaded
 
 final_dds_sat_user = PostgresOperator(
     task_id="final_dds_sat_user",
@@ -181,4 +182,5 @@ final_dds_sat_payment = PostgresOperator(
     """
 )   
 
-final_all_links_loaded >> final_dds_sat_user >> final_dds_sat_payment
+final_all_links_loaded >> final_dds_sat_user
+final_all_links_loaded >> final_dds_sat_payment
