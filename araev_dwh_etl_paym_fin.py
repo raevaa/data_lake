@@ -49,7 +49,42 @@ final_fill_ods_hashed = PostgresOperator(
     dag=dag,
     sql="""
         INSERT INTO araev.final_ods_payment_hashed
-        SELECT user_id, pay_doc_type, pay_doc_num, account, phone, billing_period, pay_date, sum, user_id::TEXT AS USER_KEY, account::TEXT AS ACCOUNT_KEY, pay_doc_type::TEXT AS pay_doc_type_key, pay_doc_num::text AS pay_doc_num_key, billing_period::TEXT AS BILLING_PERIOD_KEY, 'PAYMENT - DATA LAKE'::TEXT AS RECORD_SOURCE FROM araev.final_ods_v_payment 
+        WITH staging AS (
+		WITH derived_columns AS (
+			SELECT user_id, pay_doc_type, pay_doc_num, account, phone, billing_period, pay_date, sum, user_id::TEXT AS USER_KEY, account::TEXT AS ACCOUNT_KEY, pay_doc_type::TEXT AS pay_doc_type_key, pay_doc_num::text AS pay_doc_num_key, billing_period::TEXT AS BILLING_PERIOD_KEY, 'PAYMENT - DATA LAKE'::TEXT AS RECORD_SOURCE 
+FROM araev.final_ods_payments),
+hashed_columns AS (
+	SELECT user_id, pay_doc_type, pay_doc_num, account, phone, billing_period, pay_date, sum, USER_KEY, ACCOUNT_KEY, pay_doc_type_key, pay_doc_num_key, BILLING_PERIOD_KEY, RECORD_SOURCE,
+CAST((MD5(NULLIF(UPPER(TRIM(CAST(user_id AS VARCHAR))), ''))) AS TEXT) AS USER_PK,
+CAST((MD5(NULLIF(UPPER(TRIM(CAST(account AS VARCHAR))), ''))) AS TEXT) AS ACCOUNT_PK,
+CAST((MD5(NULLIF(UPPER(TRIM(CAST(billing_period AS VARCHAR))), ''))) AS TEXT) AS BILLING_PERIOD_PK,
+CAST(MD5(NULLIF(CONCAT_WS('||',
+	COALESCE(NULLIF(UPPER(TRIM(CAST(pay_doc_type AS VARCHAR))), ''), '^^'),
+	COALESCE(NULLIF(UPPER(TRIM(CAST(pay_doc_num AS VARCHAR))), ''), '^^')
+	), '^^||^^')) AS TEXT) AS payment_pk,
+CAST(MD5(NULLIF(CONCAT_WS('||',
+	COALESCE(NULLIF(UPPER(TRIM(CAST(user_id AS VARCHAR))), ''), '^^'),
+	COALESCE(NULLIF(UPPER(TRIM(CAST(account AS VARCHAR))), ''), '^^'),
+	COALESCE(NULLIF(UPPER(TRIM(CAST(billing_period AS VARCHAR))), ''), '^^')
+), '^^||^^||^^')) AS TEXT) AS PAY_PK,
+CAST(MD5(NULLIF(CONCAT_WS('||',
+	COALESCE(NULLIF(UPPER(TRIM(CAST(user_id AS VARCHAR))), ''), '^^'),
+	COALESCE(NULLIF(UPPER(TRIM(CAST(account AS VARCHAR))), ''), '^^')
+	), '^^||^^')) AS TEXT) AS user_account_pk,
+CAST(MD5(CONCAT_WS('||',
+	COALESCE(NULLIF(UPPER(TRIM(CAST(phone AS VARCHAR))), ''), '^^'))) AS TEXT) AS USER_HASHDIF,
+CAST(MD5(NULLIF(CONCAT_WS('||',
+	COALESCE(NULLIF(UPPER(TRIM(CAST(pay_date AS VARCHAR))), ''), '^^'),
+	COALESCE(NULLIF(UPPER(TRIM(CAST(sum AS VARCHAR))), ''), '^^')
+	), '^^||^^')) AS TEXT) AS payment_hashdif
+FROM derived_columns),
+columns_to_select AS (
+SELECT user_id, pay_doc_type, pay_doc_num, account, phone, billing_period, pay_date, sum, USER_KEY, ACCOUNT_KEY, pay_doc_type_key, pay_doc_num_key, BILLING_PERIOD_KEY, RECORD_SOURCE, USER_PK, ACCOUNT_PK, BILLING_PERIOD_PK, payment_pk, PAY_PK, user_account_pk, USER_HASHDIF, payment_hashdif
+FROM hashed_columns)
+SELECT * FROM columns_to_select)
+SELECT *, current_timestamp AS LOAD_DATE, 
+pay_date AS EFFECTIVE_FROM
+FROM staging) 
         WHERE EXTRACT(YEAR FROM pay_date::DATE) = {{ execution_date.year }}
     """
 )
