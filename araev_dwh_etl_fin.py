@@ -90,11 +90,11 @@ final_dds_hub_account = PostgresOperator(
     """
 )
 
+final_all_hubs_loaded = DummyOperator(task_id="final_all_hubs_loaded", dag=dag)
+
 final_ods_loaded >> final_dds_hub_user >> final_all_hubs_loaded
 final_ods_loaded >> final_dds_hub_billing_period >> final_all_hubs_loaded
 final_ods_loaded >> final_dds_hub_account >> final_all_hubs_loaded
-
-final_ods_loaded >> final_dds_hub_user >> final_dds_hub_billing_period >> final_dds_hub_account >> final_all_hubs_loaded
 
 final_dds_link_user_account = PostgresOperator(
     task_id="final_dds_link_user_account",
