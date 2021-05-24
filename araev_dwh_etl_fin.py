@@ -117,8 +117,7 @@ final_dds_link_account_billing_payment = PostgresOperator(
 
 final_all_links_loaded = DummyOperator(task_id="final_all_links_loaded", dag=dag)
 
-final_all_hubs_loaded >> final_dds_link_user_account >> final_all_links_loaded
-final_all_hubs_loaded >> final_dds_link_account_billing_payment >> final_all_links_loaded
+final_all_hubs_loaded >> final_dds_link_user_account >> final_dds_link_account_billing_payment >> final_all_links_loaded
 
 final_dds_sat_user = PostgresOperator(
     task_id="final_dds_sat_user",
@@ -182,5 +181,4 @@ final_dds_sat_payment = PostgresOperator(
     """
 )   
 
-final_all_links_loaded >> final_dds_sat_user
-final_all_links_loaded >> final_dds_sat_payment
+final_all_links_loaded >> final_dds_sat_user >> final_dds_sat_payment
