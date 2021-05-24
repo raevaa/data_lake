@@ -205,7 +205,7 @@ final_dds_sat_pay = PostgresOperator(
     ),
      update_records as (
         a.pay_pk, a.payment_hashdif, a.pay_doc_num, a.pay_doc_type, a.pay_date, a.sum, a.effective_from, a.load_date, a.record_source from araev.final_dds_sat_pay as a
-        join source_data as b on a.PAY_PK = b.PAY_PK AND a.LOAD_DATE <= (SELECT max(LOAD_DATE) from source_data)
+        join source_data as b on a.PAY_PK = b.PAY_PK
      ),
      latest_records as (
          select * from (
